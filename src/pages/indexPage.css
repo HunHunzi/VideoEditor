@@ -1,0 +1,32 @@
+.index-page {
+  display: flex;
+  flex-direction: column;
+  align-content: center;
+  justify-content: center;
+  width: 95%;
+  height: 100%;
+}
+
+.index-page h2 {
+  text-align: center;
+}
+
+.index-page .row {
+  display: flex;
+  flex-direction: row;
+  flex: 2;
+}
+
+.index-page .column {
+  flex: 1;
+  border: 1px solid #e8e1e1;
+  border-radius: 6px;
+  margin: 10px;
+}
+
+.index-page .bottom {
+  flex: 3;
+  border: 1px solid #e8e1e1;
+  border-radius: 6px;
+  margin: 10px;
+}
