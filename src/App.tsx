@@ -9,10 +9,11 @@ function App() {
       style={{
         display: "flex",
         flexDirection: "column",
-        height: "100Vh",
-        width: "100vw",
+        height: "95Vh",
+        width: "95vw",
         alignItems: "center",
         justifyContent: "center",
+        alignContent: "center",
       }}
     >
       <IndexPage />

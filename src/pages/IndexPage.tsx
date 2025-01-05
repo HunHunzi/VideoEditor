@@ -13,8 +13,9 @@ const IndexPage = () => {
           flexDirection: "column",
           alignContent: "center",
           justifyContent: "center",
-          width: "95%",
-          height: "100%",
+          width: "100%",
+          height: "90%",
+          marginLeft: "60px",
         }}
       >
         <h2>智能多媒体视频播放器</h2>
@@ -23,7 +24,7 @@ const IndexPage = () => {
           style={{
             display: "flex",
             flexDirection: "row",
-            flex: 3,
+            flex: 2,
           }}
         >
           <div
@@ -32,6 +33,7 @@ const IndexPage = () => {
               border: "1px solid #e8e1e1",
               margin: "10px",
               borderRadius: "6px",
+              height: "450px",
             }}
           >
             <VideoArea />
@@ -41,6 +43,7 @@ const IndexPage = () => {
               flex: 1,
               borderRadius: "6px",
               margin: "10px",
+              height: "450px",
             }}
           >
             <ControllerArea />
@@ -49,6 +52,7 @@ const IndexPage = () => {
         <div
           style={{
             flex: 1,
+
             border: "1px solid #e8e1e1",
             margin: "10px",
           }}

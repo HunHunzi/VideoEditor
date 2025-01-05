@@ -6,12 +6,15 @@ const VideoArea: React.FC = () => {
   const videoList = [];
   const { context, setContext } = useVideoContext();
 
+  const fixedWidth = "800px"; // 固定宽度
+  const fixedHeight = "450px"; // 固定高度
+
   return (
     <div
       style={{
         position: "relative",
-        width: "100%",
-        height: "100%",
+        width: fixedWidth,
+        height: fixedHeight,
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
@@ -36,7 +39,7 @@ const VideoArea: React.FC = () => {
           id="video"
           ref={videoRef}
           crossOrigin="anonymous"
-          style={{ padding: "5px", width: "95%", height: "95%" }}
+          style={{ padding: "5px", width: "100%", height: "100%" }}
           src={context.videoUrl}
           controls
         ></video>
