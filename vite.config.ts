@@ -8,9 +8,12 @@ export default defineConfig({
     include: ["@ffmpeg/ffmpeg"],
   },
   server: {
-    headers: {
-      "Cross-Origin-Opener-Policy": "same-origin",
-      "Cross-Origin-Embedder-Policy": "require-corp",
+    proxy: {
+      "/ads_svp_video": {
+        target: "https://adsmind.gdtimg.com", // 目标服务器地址
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/ads_svp_video/, "/ads_svp_video"), // 重写路径
+      },
     },
   },
 });

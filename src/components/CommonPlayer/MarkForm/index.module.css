@@ -1,0 +1,12 @@
+.antCardHead {
+  height: 15px;
+  padding: auto;
+}
+
+.antCardHeadTitle {
+  padding: 0px;
+}
+
+.rsPickerDaterange .rsPickerInputGroup {
+  height: 33px; /* 修改高度为50px */
+}

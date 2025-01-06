@@ -3,6 +3,7 @@ import React, { createContext, useState, useContext, ReactNode } from "react";
 interface VideoContextProps {
   videoUrl: string;
   videoList: string[];
+  videoIsPlaying?: boolean;
   [key: string]: any; // 允许添加其他动态属性
 }
 

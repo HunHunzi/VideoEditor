@@ -1,0 +1,103 @@
+.barrage-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  margin-top: 0px;
+  overflow: auto;
+}
+
+.barrage-container::-webkit-scrollbar {
+  width: 5px; /* 设置滚动条的宽度 */
+}
+
+.barrage-container::-webkit-scrollbar-track {
+  background: #f1f1f1; /* 设置滚动条轨道的颜色 */
+}
+
+.barrage-container::-webkit-scrollbar-thumb {
+  background: #888; /* 设置滚动条的颜色 */
+}
+
+.barrage-container::-webkit-scrollbar-thumb:hover {
+  background: #555; /* 设置滚动条鼠标悬停时的颜色 */
+}
+
+.barrage-username {
+  margin-right: 4px;
+  color: #656de5;
+  font-weight: bold;
+  font-size: 14px;
+  white-space: nowrap; /* 防止用户名换行 */
+}
+
+.barrage-reply {
+  margin-left: 4px;
+  color: #24ba63;
+  font-size: 14px;
+}
+
+.barrage-item {
+  align-items: flex-end;
+  max-width: 100%;
+  padding: 6px;
+  color: white;
+  color: black;
+  font-size: 15px;
+  line-height: 1.5;
+  word-wrap: break-word;
+  cursor: pointer;
+}
+
+.barrage-text {
+  max-width: 100px;
+  color: #333;
+  font-weight: 500;
+  word-wrap: break-word;
+}
+
+.barrage-text.isApproach {
+  color: #e9510b; /* 颜色变淡 */
+  font-weight: bold; /* 字体加粗 */
+}
+
+.barrage-text.isSubscribe {
+  color: #7a7a7ada;
+  font-weight: bold; /* 字体加粗 */
+}
+
+.barrage-text.isGift {
+  margin-left: 6px;
+  color: #ffb84d;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.barrage-time {
+  margin-right: 2px;
+  color: #807d7d;
+  font-size: 15px;
+}
+
+.barrage-item.highlight {
+  background-color: rgba(255, 227, 102, 0.3); /* 半透明的浅黄色背景 */
+}
+
+@keyframes scroll {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-100%);
+  }
+}
+
+.dropdown-menu {
+  position: absolute;
+  z-index: 1000;
+  width: auto;
+  /* 可选：确保不超出视口 */
+  max-width: 200px;
+  background: white;
+  border: 1px solid #ccc;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
