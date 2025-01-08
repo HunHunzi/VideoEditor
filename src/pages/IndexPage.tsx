@@ -4,8 +4,16 @@ import ControllerArea from "../components/ControllerArea";
 import TrackArea from "../components/TracksArea";
 import { VideoProvider } from "../store/videoContext";
 import CommonPlayer from "../components/CommonPlayer";
+import FlvPlayer from "../components/FlvPlayer";
 
 const IndexPage = () => {
+  const videoRef = React.useRef(null);
+  const handlePlayVod = () => {
+    console.log("handlePlayVod");
+    if (videoRef.current) {
+      videoRef.current.playVod();
+    }
+  };
   return (
     <VideoProvider>
       <div
@@ -29,18 +37,19 @@ const IndexPage = () => {
         >
           <div
             style={{
-              flex: 1,
               border: "1px solid #e8e1e1",
               margin: "10px",
               borderRadius: "6px",
-              height: "715px",
+              height: "815px",
               width: "1200px",
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
+              padding: 10,
             }}
           >
-            <VideoArea />
+            <CommonPlayer ref={videoRef} />
+            {/* <FlvPlayer videoUrl="http://txdirect.flv.huya.com/huyalive/1199561177177-1199561177177-5434428961511702528-2399122477810-10057-A-0-1.flv?wsSecret=0deec32f08129ec46abf079a11678ae5&wsTime=677e3f68&fm=RFdxOEJjSjNoNkRKdDZUWV8kMF8kMV8kMl8kMw%3D%3D&fs=bgct&ctype=test" /> */}
           </div>
           <div
             style={{
@@ -49,7 +58,7 @@ const IndexPage = () => {
               height: "450px",
             }}
           >
-            <ControllerArea />
+            <ControllerArea playVod={handlePlayVod} />
           </div>
         </div>
       </div>

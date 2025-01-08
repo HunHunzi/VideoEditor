@@ -33,6 +33,8 @@ import SegmentedComponent from "../SegmentedComponent";
 import MarkForm from "./MarkForm";
 import PcuChart from "./PcuChart";
 import style from "./index.module.css";
+import { useVideoContext } from "../../store/videoContext";
+import FlvPlayer from "../FlvPlayer";
 
 interface CommonPlayerProps {
   videoData: any[];
@@ -44,6 +46,7 @@ interface CommonPlayerProps {
 }
 
 const CommonPlayer = forwardRef((props: CommonPlayerProps, ref) => {
+  const { context, setContext } = useVideoContext();
   const [player, setPlayer] = useState<any>(null);
   const [isHovering, setIsHovering] = useState(true);
   const [volume, setVolume] = useState(0.5);
@@ -125,17 +128,44 @@ const CommonPlayer = forwardRef((props: CommonPlayerProps, ref) => {
     if (player) {
       return;
     }
-    const initParams = {
-      appId: 66,
-      ua: `webh5&${window.VodSdkPlayer.VERSION}&huya`,
-      source: "huya_wiki",
-      uid: 0,
-      anchorUid: 0,
-      isCloseVodPcdn: 1,
-    };
-    const videoVod = new window.VodSdkPlayer(initParams);
-    console.log("初始化播放器", videoVod);
-    setPlayer(videoVod);
+
+    const videoElement = document.createElement("video");
+    videoElement.setAttribute("preload", "auto");
+    videoElement.style.width = "100%";
+    videoElement.style.height = "100%";
+    videoRef.current?.appendChild(videoElement);
+
+    // 创建 flv.js 播放器
+    const newPlayer = flvjs.createPlayer({
+      type: "flv",
+      url: "http://txdirect.flv.huya.com/huyalive/1199561177177-1199561177177-5434428961511702528-2399122477810-10057-A-0-1.flv?wsSecret=0deec32f08129ec46abf079a11678ae5&wsTime=677e3f68&fm=RFdxOEJjSjNoNkRKdDZUWV8kMF8kMV8kMl8kMw%3D%3D&fs=bgct&ctype=test", // FLV 视频流 URL
+    });
+
+    newPlayer.attachMediaElement(videoElement); // 将 flv.js 播放器与新创建的 video 元素绑定
+    newPlayer.load();
+    newPlayer.play();
+
+    // 设置音量
+    let volTmp = localStorage.getItem("playVolume");
+    if (
+      volTmp &&
+      isFinite(Number(volTmp)) &&
+      Number(volTmp) >= 0 &&
+      Number(volTmp) <= 1
+    ) {
+      setVolume(parseFloat(volTmp));
+      newPlayer.setVolume(parseFloat(volTmp));
+    } else {
+      setVolume(1);
+      newPlayer.setVolume(1);
+    }
+
+    // 播放器和 volumechange 事件监听
+    newPlayer.on(flvjs.Events.MEDIA_ATTACHED, () => {
+      newPlayer.setVolume(volume);
+    });
+
+    setPlayer(newPlayer);
   };
 
   const createVideo = (videoVod: any, isStop: boolean = false) => {
@@ -190,6 +220,11 @@ const CommonPlayer = forwardRef((props: CommonPlayerProps, ref) => {
    * 播放视频
    */
   const playVod = (item: any, isStop?: boolean) => {
+    item = {
+      videoUrl: context.videoUrl,
+    };
+    const videoUrl = item?.videoUrl;
+
     if (!player || !item) {
       return;
     }
@@ -197,8 +232,18 @@ const CommonPlayer = forwardRef((props: CommonPlayerProps, ref) => {
     player?.stop();
 
     setVideoStartTime(item?.beginTime);
-    let videoType = window.VodSdkPlayer?.MP4;
-    let streamType = window.VodSdkPlayer?.StreamType.MP4;
+
+    if (videoUrl.endsWith(".mp4")) {
+      videoType = window.VodSdkPlayer?.MP4;
+      streamType = window.VodSdkPlayer?.StreamType.MP4;
+    } else if (videoUrl.endsWith(".flv")) {
+      videoType = window.VodSdkPlayer?.FLV;
+      streamType = window.VodSdkPlayer?.StreamType.FLV;
+    } else {
+      // 默认类型或处理其他类型
+      videoType = window.VodSdkPlayer?.MP4;
+      streamType = window.VodSdkPlayer?.StreamType.MP4;
+    }
 
     const startParams = {
       url: item.videoUrl || "",
@@ -232,11 +277,14 @@ const CommonPlayer = forwardRef((props: CommonPlayerProps, ref) => {
   };
 
   const handlePlay = () => {
+    // 如果播放器存在
+    playVod({
+      videoUrl: context.videoUrl,
+    });
     setPlayIng(true);
     setIsVideoEnd(false);
     // 播放
     player?.play();
-    console.log("播放", player);
   };
 
   const handlePause = () => {
@@ -774,12 +822,6 @@ const CommonPlayer = forwardRef((props: CommonPlayerProps, ref) => {
         player.off("VIDEO_TIMEUPDATE", handleTimeUpdate); // 移除旧的监听
         player.on("VIDEO_TIMEUPDATE", handleTimeUpdate); // 添加新的监听
       });
-
-      // 如果播放器存在
-      playVod({
-        videoUrl:
-          "https://adsmind.gdtimg.com/ads_svp_video__0b53tybfcaacbyacnsrpnntrrhqekgpaeuka.f140010.mp4?dis_k=1ea4b8fe93958932d34a8e532a9c6eaa&dis_t=1731033093&sha256=de93fc7013b94c1dab07da994eb4cfcbb2049e62eb4a4d7c4d3533c71e422517&m=03bf8bb1242b681424c19d4df2363920&stdfrom=25&&u=1200714702920&t=100&sv=2501060401&sdk_sid=1736158328751&a_block=0",
-      });
     }
     return () => {
       player?.stop();
@@ -1132,8 +1174,8 @@ const CommonPlayer = forwardRef((props: CommonPlayerProps, ref) => {
         <div
           style={{
             background: "rgb(22, 22, 22)",
-            minHeight: 715,
-            height: 715,
+            minHeight: 815,
+            height: 815,
             overflow: "hidden", // 限制溢出
           }}
         >

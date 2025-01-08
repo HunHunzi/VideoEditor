@@ -183,7 +183,7 @@ const SegmentedComponent: React.FC<SegmentedComponentProps> = ({
         justifyContent: "center",
         width: 300,
         flexDirection: "column",
-        minHeight: 508,
+        minHeight: 608,
         position: "relative",
       }}
     >
@@ -215,7 +215,7 @@ const SegmentedComponent: React.FC<SegmentedComponentProps> = ({
             //   ? document.body.clientHeight - 327
             //   : document.body.clientHeight - 302,
             backgroundColor: "#fff",
-            height: 480,
+            height: 580,
             width: 300,
             position: "relative",
           }}
@@ -338,7 +338,7 @@ const SegmentedComponent: React.FC<SegmentedComponentProps> = ({
           style={{
             display: "flex",
             flexDirection: "column",
-            height: 687,
+            height: 787,
             width: 300,
           }}
         >
@@ -445,7 +445,7 @@ const SegmentedComponent: React.FC<SegmentedComponentProps> = ({
         </div>
       )}
       {segmentedValue == "我的" && (
-        <div style={{ height: 480, width: 300 }} className="thin-scrollbar">
+        <div style={{ height: 580, width: 300 }} className="thin-scrollbar">
           <List>
             {myTaskList?.map((item: any, index: any) => (
               <List.Item
