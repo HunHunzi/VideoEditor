@@ -38,8 +38,7 @@ const ControllerArea = ({ playVod }) => {
   const handleAddVideoList = (url: string) => {
     const videoList = context.videoList;
     const newVideoList = [...videoList, url];
-    setContext("videoList", newVideoList);
-    console.log("videoList", newVideoList);
+    setContext("videoUrl", newVideoList);
   };
 
   return (
@@ -89,6 +88,21 @@ const ControllerArea = ({ playVod }) => {
                 handleAddVideoUrl(e.target.value);
               }}
             />
+            <a>or</a>
+            <input
+              type="file"
+              ref={fileInputRef}
+              style={{ display: "none" }}
+              onChange={handleFileChange}
+            />
+            <Button
+              size="large"
+              style={{ marginLeft: "10px" }}
+              icon={<UploadOutlined />}
+              onClick={handleButtonClick}
+            >
+              上传文件
+            </Button>
 
             <PlayCircleTwoTone
               style={{

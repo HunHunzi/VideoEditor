@@ -34,7 +34,7 @@ import MarkForm from "./MarkForm";
 import PcuChart from "./PcuChart";
 import style from "./index.module.css";
 import { useVideoContext } from "../../store/videoContext";
-import FlvPlayer from "../FlvPlayer";
+import flvjs from "flv.js";
 
 interface CommonPlayerProps {
   videoData: any[];
@@ -119,13 +119,28 @@ const CommonPlayer = forwardRef((props: CommonPlayerProps, ref) => {
 
   const videoRef = useRef<any>(null);
 
+  const [isFlv, setIsFlv] = useState(false); // 是否为 FLV 格式
+
+  // 更新视频 URL 和 FLV 格式标识
+  useEffect(() => {
+    setIsFlv(context.videoUrl.endsWith(".flv")); // 判断是否为 FLV 格式
+
+    // 每次 URL 改变时初始化播放器
+    if (context.videoUrl) {
+      setPlayIng(true);
+
+      initVodPlayer();
+    }
+  }, [context.videoUrl]); // 当 videoUrl 改变时重新初始化播放器
+
   /**
    * 初始化播放器
    * @returns
    */
-
   const initVodPlayer = async () => {
+    console.log("初始化播放器");
     if (player) {
+      // 如果播放器已经存在，直接返回
       return;
     }
 
@@ -133,17 +148,51 @@ const CommonPlayer = forwardRef((props: CommonPlayerProps, ref) => {
     videoElement.setAttribute("preload", "auto");
     videoElement.style.width = "100%";
     videoElement.style.height = "100%";
-    videoRef.current?.appendChild(videoElement);
 
-    // 创建 flv.js 播放器
-    const newPlayer = flvjs.createPlayer({
-      type: "flv",
-      url: "http://txdirect.flv.huya.com/huyalive/1199561177177-1199561177177-5434428961511702528-2399122477810-10057-A-0-1.flv?wsSecret=0deec32f08129ec46abf079a11678ae5&wsTime=677e3f68&fm=RFdxOEJjSjNoNkRKdDZUWV8kMF8kMV8kMl8kMw%3D%3D&fs=bgct&ctype=test", // FLV 视频流 URL
+    // 将视频元素插入到 DOM 中
+    if (videoRef.current) {
+      videoRef.current.innerHTML = ""; // 清空之前的内容
+      videoRef.current.appendChild(videoElement);
+    }
+
+    const videoUrl = context.videoUrl || "";
+    // const videoUrl =
+    // "http://txdirect.flv.huya.com/huyalive/1199561177177-1199561177177-5434428961511702528-2399122477810-10057-A-0-1.flv?wsSecret=0deec32f08129ec46abf079a11678ae5&wsTime=677e3f68&fm=RFdxOEJjSjNoNkRKdDZUWV8kMF8kMV8kMl8kMw%3D%3D&fs=bgct&ctype=test.flv";
+
+    const isFlv = videoUrl.endsWith(".flv");
+    if (isFlv) {
+      // 使用 flv.js 播放 FLV 视频
+      const newPlayer = flvjs.createPlayer({
+        type: "flv",
+        url: videoUrl,
+      });
+      newPlayer.attachMediaElement(videoElement);
+      newPlayer.load();
+
+      setPlayer(newPlayer); // 设置播放器实例
+
+      // 播放视频
+      newPlayer.play();
+    } else {
+      // 使用原生 video 播放其他视频格式
+      videoElement.src = videoUrl;
+      videoElement.load();
+      videoElement.play();
+    }
+
+    videoElement.addEventListener("timeupdate", () => {
+      setPlayerCurrentTime(videoElement.currentTime);
     });
 
-    newPlayer.attachMediaElement(videoElement); // 将 flv.js 播放器与新创建的 video 元素绑定
-    newPlayer.load();
-    newPlayer.play();
+    videoElement.addEventListener("volumechange", (e: any) => {
+      setVolume(e.target.volume);
+    });
+
+    videoElement.addEventListener("durationchange", () => {
+      if (videoElement.duration) {
+        setTotalTime(videoElement.duration);
+      }
+    });
 
     // 设置音量
     let volTmp = localStorage.getItem("playVolume");
@@ -154,133 +203,73 @@ const CommonPlayer = forwardRef((props: CommonPlayerProps, ref) => {
       Number(volTmp) <= 1
     ) {
       setVolume(parseFloat(volTmp));
-      newPlayer.setVolume(parseFloat(volTmp));
     } else {
       setVolume(1);
-      newPlayer.setVolume(1);
     }
 
-    // 播放器和 volumechange 事件监听
-    newPlayer.on(flvjs.Events.MEDIA_ATTACHED, () => {
-      newPlayer.setVolume(volume);
-    });
-
-    setPlayer(newPlayer);
+    // 播放器的 volumechange 事件监听
+    if (isFlv && player) {
+      player.on(flvjs.Events.MEDIA_ATTACHED, () => {
+        player.setVolume(volume);
+      });
+    }
   };
 
-  const createVideo = (videoVod: any, isStop: boolean = false) => {
+  const createVideo = (isStop: boolean = false) => {
     const videoElement = document.querySelector("video");
+    if (!videoElement) return;
+
     const videoDescElement = document.querySelector("#video_desc");
-
-    if (videoElement && videoRef.current?.contains(videoElement)) {
-      videoRef.current.removeChild(videoElement);
-    }
     if (videoDescElement && videoRef.current?.contains(videoDescElement)) {
-      videoRef.current.removeChild(videoDescElement);
+      videoRef.current?.removeChild(videoDescElement);
     }
 
-    const newVideo: HTMLVideoElement = videoVod?.playerMgr?.videoElement;
-
-    if (newVideo) {
-      newVideo.setAttribute("preload", "auto");
-      newVideo.style.width = "100%";
-      newVideo.style.height = "100%";
-      videoRef.current?.appendChild(newVideo);
-
-      if (isStop) {
-        videoVod.pause(); // 否则暂停
-      } else {
-        videoVod.play(); // 自动播放
-      }
-
-      let volTmp = localStorage.getItem("playVolume");
-      if (
-        volTmp &&
-        isFinite(Number(volTmp)) &&
-        Number(volTmp) >= 0 &&
-        Number(volTmp) <= 1
-      ) {
-        setVolume(parseFloat(volTmp));
-        player?.setVolume(volTmp);
-      } else {
-        setVolume(1);
-        player?.setVolume(1);
-      }
-
-      newVideo.addEventListener("volumechange", onVolumeChange);
+    // 设置音量和播放状态
+    if (isStop) {
+      videoElement.pause(); // 暂停视频
+    } else {
+      videoElement.play(); // 播放视频
     }
-  };
 
-  const onVolumeChange = (e: any) => {
-    setVolume(e.target.volume);
-    localStorage.setItem("playVolume", e.target.volume);
+    videoElement.addEventListener("volumechange", (e) => {
+      setVolume(e.target.volume);
+      localStorage.setItem("playVolume", e.target.volume);
+    });
   };
 
   /*
    * 播放视频
    */
   const playVod = (item: any, isStop?: boolean) => {
-    item = {
-      videoUrl: context.videoUrl,
-    };
-    const videoUrl = item?.videoUrl;
-
-    if (!player || !item) {
+    if (!item || !player) {
       return;
     }
 
-    player?.stop();
+    // 初始化播放器，第一次调用时才初始化
+    initVodPlayer().then(() => {
+      if (player) {
+        setSelectedId(item.id); // 设置当前选择的视频 ID
+        setVideoStartTime(item.beginTime);
+        // 设置视频的链接
 
-    setVideoStartTime(item?.beginTime);
+        // 控制视频播放
+        createVideo(isStop);
 
-    if (videoUrl.endsWith(".mp4")) {
-      videoType = window.VodSdkPlayer?.MP4;
-      streamType = window.VodSdkPlayer?.StreamType.MP4;
-    } else if (videoUrl.endsWith(".flv")) {
-      videoType = window.VodSdkPlayer?.FLV;
-      streamType = window.VodSdkPlayer?.StreamType.FLV;
-    } else {
-      // 默认类型或处理其他类型
-      videoType = window.VodSdkPlayer?.MP4;
-      streamType = window.VodSdkPlayer?.StreamType.MP4;
-    }
-
-    const startParams = {
-      url: item.videoUrl || "",
-      type: videoType || window.VodSdkPlayer?.MP4,
-      vid: 0,
-      h5Root: "",
-      curBitrate: "",
-      streamType: streamType || window.VodSdkPlayer?.StreamType.MP4,
-      liveType: 0,
-      lineType: 0,
-      presenterUid: 0,
-    };
-    createVideo(player, isStop);
-
-    player?.on("VIDEO_PLAY", () => {
-      createVideo(player, isStop);
-    });
-    player?.start(startParams);
-    if (player) {
-      setSelectedId(item.id); //设置
-      setPlayerCurrentTime(0);
-      let playbackRate = localStorage.getItem("playbackRate");
-      if (playbackRate) {
-        setPlaybackRate(parseFloat(playbackRate));
-        player?.setPlaybackRate(parseFloat(playbackRate));
-      } else {
-        setPlaybackRate(1);
-        player?.setPlaybackRate(1);
+        // 设置播放速率
+        let playbackRate = localStorage.getItem("playbackRate");
+        if (playbackRate) {
+          setPlaybackRate(parseFloat(playbackRate));
+          player.setPlaybackRate(parseFloat(playbackRate));
+        } else {
+          setPlaybackRate(1);
+          player.setPlaybackRate(1);
+        }
       }
-    }
+    });
   };
-
   const handlePlay = () => {
     // 如果播放器存在
-    playVod({
-      videoUrl: context.videoUrl,
-    });
+
     setPlayIng(true);
     setIsVideoEnd(false);
     // 播放
@@ -356,7 +345,6 @@ const CommonPlayer = forwardRef((props: CommonPlayerProps, ref) => {
     //  添加快捷键监听
 
     return () => {
-      player?.stop();
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
@@ -404,9 +392,7 @@ const CommonPlayer = forwardRef((props: CommonPlayerProps, ref) => {
     const time = percent * totalTime;
 
     // 转换成时间 例如 1：22：31
-    const timeTip = moment((time + videoStartTime) * 1000).format(
-      "MM-DD HH:mm:ss"
-    );
+    const timeTip = moment((time + videoStartTime) * 1000).format("HH:mm:ss");
 
     // 设置工具提示位置和时间
     setTooltip({
@@ -773,61 +759,6 @@ const CommonPlayer = forwardRef((props: CommonPlayerProps, ref) => {
     },
   }));
 
-  useEffect(() => {
-    if (player) {
-      player.on("VIDEO_PLAYING", () => {
-        //console.log('总时长', player?.getDuration());
-        setPlayIng(true);
-        console.log("总时长", player?.getDuration());
-        setTotalTime(player?.getDuration());
-        setBufferedTime(0);
-      });
-      player.on("VIDEO_PAUSE", () => {
-        setPlayIng(false);
-      });
-
-      const handleTimeUpdate = (obj: object, data: any) => {
-        console.log("当前时间", data.currentTime, data.currentTime % 60);
-        setPlayerCurrentTime(data.currentTime);
-        // //console.log('当前时间', data.currentTime, data.currentTime % 60);
-        const buffered = player?.getBuffered();
-        if (buffered && buffered.length > 0) {
-          const newBufferedTime = buffered.end(buffered.length - 1);
-          setBufferedTime((prevBufferedTime) => {
-            // 仅在新值大于当前值时更新 bufferedTime
-            return newBufferedTime > prevBufferedTime
-              ? newBufferedTime
-              : prevBufferedTime;
-          });
-        }
-      };
-      // 暂停时取消监听
-      player.on("VIDEO_PAUSE", () => {
-        player.off("VIDEO_TIMEUPDATE", handleTimeUpdate);
-      });
-      // 结束时取消监听
-      player.on("VIDEO_END", () => {
-        player.off("VIDEO_TIMEUPDATE", handleTimeUpdate);
-        setPlayIng(false);
-      });
-      // 暂停重新播放时重新监听
-      player.on("VIDEO_PLAYING", () => {
-        player.off("VIDEO_TIMEUPDATE", handleTimeUpdate); // 移除旧的监听
-        player.on("VIDEO_TIMEUPDATE", handleTimeUpdate); // 添加新的监听
-      });
-      // seek后重新监听
-      player.on("VIDEO_SEEK", () => {
-        // seek后立即请求弹幕
-        setSeekTime(player?.getCurrentTime());
-        player.off("VIDEO_TIMEUPDATE", handleTimeUpdate); // 移除旧的监听
-        player.on("VIDEO_TIMEUPDATE", handleTimeUpdate); // 添加新的监听
-      });
-    }
-    return () => {
-      player?.stop();
-    };
-  }, [player]);
-
   const progressWrapArea = () => {
     return (
       <div className={style.progressAreaWrap}>
@@ -1014,40 +945,18 @@ const CommonPlayer = forwardRef((props: CommonPlayerProps, ref) => {
           </div>
           {/* 时间 */}
           <div className={style.timeDisplay}>
-            {playerCurrentTime ? (
-              <span>
-                {moment((videoStartTime + playerCurrentTime) * 1000).format(
-                  "MM-DD HH:mm:ss"
-                )}
-              </span>
-            ) : (
-              <span>0:00</span>
-            )}
-            /
-            {totalTime ? (
-              <span>
-                {videoStartTime + totalTime
-                  ? moment((videoStartTime + totalTime) * 1000).format(
-                      "MM-DD HH:mm"
-                    )
-                  : ""}
-              </span>
-            ) : (
-              <span>0:00</span>
-            )}
-            {videoStartTime ? (
-              <span style={{ marginLeft: "5px" }}>
-                总时长
-                {Math.floor(totalTime / 3600)}:
-                {Math.floor((totalTime % 3600) / 60) < 10
-                  ? "0" + Math.floor((totalTime % 3600) / 60)
-                  : Math.floor((totalTime % 3600) / 60)}
-                :
-                {Math.floor(totalTime % 60) < 10
-                  ? "0" + Math.floor(totalTime % 60)
-                  : Math.floor(totalTime % 60)}
-              </span>
-            ) : null}
+            {/* 当前播放时间 */}
+            <span>
+              {playerCurrentTime
+                ? moment.utc(playerCurrentTime * 1000).format("HH:mm:ss")
+                : "00:00"}
+            </span>
+            /{/* 视频总时长 */}
+            <span>
+              {totalTime
+                ? moment.utc(totalTime * 1000).format("HH:mm:ss")
+                : "00:00"}
+            </span>
           </div>
 
           {/* 直播数据是否展示 */}
@@ -1240,7 +1149,7 @@ const CommonPlayer = forwardRef((props: CommonPlayerProps, ref) => {
                 display: playIng ? "none" : "block",
                 fontSize: "70px",
                 color: "#eeee",
-                zIndex: 1,
+                zIndex: 9999,
                 position: "absolute",
                 top: "50%",
                 left: "50%",
