@@ -68,6 +68,7 @@ const CommonPlayer = forwardRef((props: CommonPlayerProps, ref) => {
   const [outsideFormVisible, setOutsideFormVisible] = useState(false); // 外站数字人打点表单是否显示
 
   const [targetTime, setTargetTime] = useState(0);
+  const [isShowAll, setIsShowAll] = useState(false);
   const isOutsideDigitalHuman = props.businessType == "outsideDigitalHuman";
   const isNpcBarrage = props.businessType == "npcBarrage";
 
